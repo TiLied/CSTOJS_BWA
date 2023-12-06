@@ -15,5 +15,9 @@ CSharpToJavaScript library: https://github.com/TiLied/CSharpToJavaScript
 
 CLI for library: https://github.com/TiLied/CSTOJS_CLI
 
+VS Code Extension using CLI: https://github.com/TiLied/CSTOJS_VSCode_Ext
+
+VS Extension using CLI: https://github.com/TiLied/CSTOJS_VS_Ext
+
 ## Thanks for packages and content <3
 [Blazor WebAssembly](https://learn.microsoft.com/en-us/aspnet/core/blazor/?view=aspnetcore-7.0#blazor-webassembly)
