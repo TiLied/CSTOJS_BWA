@@ -4,7 +4,7 @@ Blazor WebAssembly for [CSharpToJavaScript library](https://github.com/TiLied/CS
 [Try it here!](https://tilied.github.io/CSTOJS_Pages/BWA/)
 
 ## Some Todos
-- [ ] Add options.
+- [x] ~Add options.~
 
 ## Related Repository 
 Website/documentation: https://github.com/TiLied/CSTOJS_Pages
