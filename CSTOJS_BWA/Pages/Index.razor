@@ -1,0 +1,81 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Components.Forms;
+@using CSharpToJavaScript;
+@using System.Text;
+@using Microsoft.CodeAnalysis;
+@using System.Reflection;
+@inject NavigationManager navigationManager
+
+<h1>CSharpToJavaScript Online!</h1>
+<h3>Note: Due to blazor webassembly not all references loaded, may result in different outcome compare to the Nuget package.</h3>
+
+<a href="https://tilied.github.io/CSTOJS_Pages/"><button type="button">Back to documentation</button></a>
+<EditForm Model="@_EditContext" OnValidSubmit="@Submit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div>
+        <label>
+            CSharp input:
+			<InputTextArea spellcheck="false" @bind-Value="@Model.CSString" />
+        </label>
+    </div>
+	<div>
+		<button type="submit">Convert to JS</button>		
+	</div>
+	<div>
+		<label>
+			JavaScript output:
+			<InputTextArea @bind-Value="@Model.JSString" readonly />
+		</label>
+	</div>
+</EditForm>
+
+@code {
+	private EditContext? _EditContext;
+	private CSTOJS _CSTOJS = new(new CSTOJSOptions() { DisableConsoleOutput = true, DisableConsoleColors = true });
+	private List<MetadataReference> _References = new();
+
+	public CSTOJSModel Model = new();
+
+	protected override void OnInitialized()
+	{
+		Model.CSString = @"namespace ConsoleAppTest.CSharp;
+public class Test
+{
+	private string _HW = ""HelloWorld!"";
+	public Test()
+	{
+		Console.WriteLine(_HW);
+	}
+}";
+		_EditContext = new(Model);
+	}
+
+	protected override async Task OnInitializedAsync()
+	{
+		Assembly assembly = Assembly.GetEntryAssembly();
+
+		var refs = assembly.GetReferencedAssemblies();
+
+		var client = new HttpClient
+		{
+			BaseAddress = new Uri(navigationManager.BaseUri)
+		};
+		Stream stream = await client.GetStreamAsync($"_framework/System.Private.CoreLib.dll");
+		_References.Add(MetadataReference.CreateFromStream(stream));
+
+		foreach (var reference in refs)
+		{
+			stream = await client.GetStreamAsync($"_framework/{reference.Name + ".dll"}");
+			_References.Add(MetadataReference.CreateFromStream(stream));
+			if (_CSTOJS.Options.Debug)
+				Console.WriteLine(reference.Name);
+		}
+	}
+
+	private void Submit()
+	{
+		StringBuilder sb = _CSTOJS.GenerateOneFromString(Model.CSString, _References);
+		Model.JSString = sb.ToString();
+	}
+}
