@@ -5,6 +5,7 @@
 @using Microsoft.CodeAnalysis;
 @using System.Reflection;
 @using System.IO
+@using System.Diagnostics
 @inject NavigationManager navigationManager
 
 <h1>CSharpToJavaScript Online!</h1>
@@ -14,16 +15,23 @@
 <EditForm Model="@_EditContext" OnValidSubmit="@Submit">
     <DataAnnotationsValidator />
     <ValidationSummary />
-    <div>
+    <div class="CSInput">
         <label>
             CSharp input:
 			<InputTextArea spellcheck="false" @bind-Value="@Model.CSString" />
         </label>
     </div>
-	<div>
-		<button type="submit">Convert to JS</button>		
+	<div class="CSTOJSOptions">
+		<button type="submit">Convert to JS</button>
+		<label>Debug: <InputCheckbox @bind-Value="@Model.Debug"></InputCheckbox> </label>
+		<label>Disable Console Output: <InputCheckbox @bind-Value="@Model.DisableConsoleOutput"></InputCheckbox> </label>
+		<label>Use Var Over Let: <InputCheckbox @bind-Value="@Model.UseVarOverLet"></InputCheckbox> </label>
+		<label>Keep Brace On The Same Line: <InputCheckbox @bind-Value="@Model.KeepBraceOnTheSameLine"></InputCheckbox> </label>
+		<label>Normalize Whitespace: <InputCheckbox @bind-Value="@Model.NormalizeWhitespace"></InputCheckbox> </label>
+		<label>Add string at the top: <InputText @bind-Value="@Model.AddSBInFront"></InputText> </label>
+		<label>Add string at the bottom: <InputText @bind-Value="@Model.AddSBInEnd"></InputText> </label>
 	</div>
-	<div>
+	<div class="JSOutput">
 		<label>
 			JavaScript output:
 			<InputTextArea @bind-Value="@Model.JSString" readonly />
@@ -48,7 +56,8 @@ public class Test
 	{
 		Console.WriteLine(_HW);
 	}
-}";
+}
+";
 		_EditContext = new(Model);
 	}
 
@@ -56,26 +65,61 @@ public class Test
 	{
 		Assembly? assembly = Assembly.GetEntryAssembly();
 
-		var refs = assembly.GetReferencedAssemblies();
+		AssemblyName[]? refs = assembly?.GetReferencedAssemblies();
 
-		var client = new HttpClient
+		HttpClient client = new()
 		{
 			BaseAddress = new Uri(navigationManager.BaseUri)
 		};
 		Stream stream = await client.GetStreamAsync($"_framework/System.Private.CoreLib.dll");
 		_References.Add(MetadataReference.CreateFromStream(stream));
 
-		foreach (var reference in refs)
+		if (refs != null)
 		{
-			stream = await client.GetStreamAsync($"_framework/{reference.Name + ".dll"}");
-			_References.Add(MetadataReference.CreateFromStream(stream));
-			if (_CSTOJS.Options.Debug)
+			foreach (AssemblyName reference in refs)
+			{
+				stream = await client.GetStreamAsync($"_framework/{reference.Name + ".dll"}");
+				_References.Add(MetadataReference.CreateFromStream(stream));
 				Console.WriteLine(reference.Name);
+			}
 		}
+		else
+		{
+			Debug.Assert(true, "refs is null");
+		}
+		Console.WriteLine("--- --- ---");
+		Console.WriteLine("   -   -   ");
+		Console.WriteLine("--- --- ---");
 	}
 
 	private void Submit()
 	{
+		StringBuilder stringBuilder1 = new();
+		if (Model.AddSBInFront != string.Empty)
+		{
+			stringBuilder1.AppendLine(Model.AddSBInFront);
+		}
+		StringBuilder stringBuilder2 = new();
+		if (Model.AddSBInEnd != string.Empty)
+		{
+			stringBuilder2.AppendLine(Model.AddSBInEnd);
+		}
+
+
+		CSTOJS _CSTOJS = new(new CSTOJSOptions() 
+			{ 
+				DisableConsoleColors = true,
+				
+				Debug = Model.Debug,
+				DisableConsoleOutput = Model.DisableConsoleOutput,
+				UseVarOverLet = Model.UseVarOverLet,
+				KeepBraceOnTheSameLine = Model.KeepBraceOnTheSameLine,
+				NormalizeWhitespace = Model.NormalizeWhitespace,
+
+				AddSBInFront = stringBuilder1,
+				AddSBInEnd = stringBuilder2
+			});
+
 		StringBuilder sb = _CSTOJS.GenerateOneFromString(Model.CSString, _References);
 		Model.JSString = sb.ToString();
 	}
