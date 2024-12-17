@@ -4,6 +4,7 @@
 @using System.Text;
 @using Microsoft.CodeAnalysis;
 @using System.Reflection;
+@using System.IO
 @inject NavigationManager navigationManager
 
 <h1>CSharpToJavaScript Online!</h1>
@@ -53,7 +54,7 @@ public class Test
 
 	protected override async Task OnInitializedAsync()
 	{
-		Assembly assembly = Assembly.GetEntryAssembly();
+		Assembly? assembly = Assembly.GetEntryAssembly();
 
 		var refs = assembly.GetReferencedAssemblies();
 
