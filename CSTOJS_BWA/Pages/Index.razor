@@ -13,14 +13,14 @@
 
 <a href="https://tilied.github.io/CSTOJS_Pages/"><button type="button">Back to documentation</button></a>
 <EditForm Model="@_EditContext" OnValidSubmit="@Submit">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
-    <div class="CSInput">
-        <label>
-            CSharp input:
+	<DataAnnotationsValidator />
+	<ValidationSummary />
+	<div class="CSInput">
+		<label>
+			CSharp input:
 			<InputTextArea spellcheck="false" @bind-Value="@Model.CSString" />
-        </label>
-    </div>
+		</label>
+	</div>
 	<div class="CSTOJSOptions">
 		<button type="submit">Convert to JS</button>
 		<label>Debug: <InputCheckbox @bind-Value="@Model.Debug"></InputCheckbox> </label>
@@ -28,8 +28,10 @@
 		<label>Use Var Over Let: <InputCheckbox @bind-Value="@Model.UseVarOverLet"></InputCheckbox> </label>
 		<label>Keep Brace On The Same Line: <InputCheckbox @bind-Value="@Model.KeepBraceOnTheSameLine"></InputCheckbox> </label>
 		<label>Normalize Whitespace: <InputCheckbox @bind-Value="@Model.NormalizeWhitespace"></InputCheckbox> </label>
-		<label>Add string at the top: <InputText @bind-Value="@Model.AddSBInFront"></InputText> </label>
-		<label>Add string at the bottom: <InputText @bind-Value="@Model.AddSBInEnd"></InputText> </label>
+		<label>Use Strict Equality: <InputCheckbox @bind-Value="@Model.UseStrictEquality"></InputCheckbox> </label>
+		<label>Custom CS names to JS: <InputText title="Example:Console-console,WriteLine-log"  @bind-Value="@Model.CustomCSNamesToJS"></InputText> </label>
+		<label>Add string at the top: <InputText @bind-Value="@Model.AddSBAtTheTop"></InputText> </label>
+		<label>Add string at the bottom: <InputText @bind-Value="@Model.AddSBAtTheBottom" ></InputText> </label>
 	</div>
 	<div class="JSOutput">
 		<label>
@@ -40,6 +42,13 @@
 </EditForm>
 
 @code {
+	//
+	//
+	//Once CSharpToJavaScript 0.0.09 releases DELETE direct reference to CSharpToJavaScript
+	//And use Nuget package!
+	//There is a hotfix for references.
+	//
+	//
 	private EditContext? _EditContext;
 	private CSTOJS _CSTOJS = new(new CSTOJSOptions() { DisableConsoleColors = true });
 	private List<MetadataReference> _References = new();
@@ -48,13 +57,13 @@
 
 	protected override void OnInitialized()
 	{
-		Model.CSString = @"namespace ConsoleAppTest.CSharp;
+		Model.CSString = @"namespace CSTOJS_BWA.CSharp;
 public class Test
 {
-	private string _HW = ""HelloWorld!"";
 	public Test()
 	{
-		Console.WriteLine(_HW);
+		int i = 5;
+		Console.WriteLine($""Hello world! {i}"");
 	}
 }
 ";
@@ -87,6 +96,7 @@ public class Test
 		{
 			Debug.Assert(true, "refs is null");
 		}
+
 		Console.WriteLine("--- --- ---");
 		Console.WriteLine("   -   -   ");
 		Console.WriteLine("--- --- ---");
@@ -94,17 +104,43 @@ public class Test
 
 	private void Submit()
 	{
-		StringBuilder stringBuilder1 = new();
-		if (Model.AddSBInFront != string.Empty)
+		Model.CustomCSNamesToJS = Model.CustomCSNamesToJS.Replace(" ", "").Trim();
+
+		StringBuilder stringBuilderTop = new();
+		if (Model.AddSBAtTheTop != string.Empty)
 		{
-			stringBuilder1.AppendLine(Model.AddSBInFront);
+			stringBuilderTop.AppendLine(Model.AddSBAtTheTop);
 		}
-		StringBuilder stringBuilder2 = new();
-		if (Model.AddSBInEnd != string.Empty)
+		StringBuilder stringBuilderBottom = new();
+		if (Model.AddSBAtTheBottom != string.Empty)
 		{
-			stringBuilder2.AppendLine(Model.AddSBInEnd);
+			stringBuilderBottom.AppendLine(Model.AddSBAtTheBottom);
 		}
 
+		List<Tuple<string, string>> _cstojsList = new();
+
+		if (Model.CustomCSNamesToJS != string.Empty)
+		{
+			List<string> _localTuples = new();
+			if (Model.CustomCSNamesToJS.Contains(","))
+			{
+				_localTuples = Model.CustomCSNamesToJS.Split(",").ToList();
+
+				for (int i = 0; i < _localTuples.Count; i++)
+				{
+					string[] _local = _localTuples[i].Split("-");
+					_cstojsList.Add(new(_local[0], _local[1]));
+				}
+			}
+			else 
+			{
+				if (Model.CustomCSNamesToJS.Contains("-")) 
+				{
+					string[] _local = Model.CustomCSNamesToJS.Split("-");
+					_cstojsList.Add(new(_local[0], _local[1]));
+				}
+			}
+		}
 
 		CSTOJS _CSTOJS = new(new CSTOJSOptions() 
 			{ 
@@ -115,11 +151,13 @@ public class Test
 				UseVarOverLet = Model.UseVarOverLet,
 				KeepBraceOnTheSameLine = Model.KeepBraceOnTheSameLine,
 				NormalizeWhitespace = Model.NormalizeWhitespace,
+				UseStrictEquality = Model.UseStrictEquality,
 
-				AddSBInFront = stringBuilder1,
-				AddSBInEnd = stringBuilder2
+				CustomCSNamesToJS = _cstojsList,
+
+				AddSBAtTheTop = stringBuilderTop,
+				AddSBAtTheBottom = stringBuilderBottom
 			});
-
 		StringBuilder sb = _CSTOJS.GenerateOneFromString(Model.CSString, _References);
 		Model.JSString = sb.ToString();
 	}
