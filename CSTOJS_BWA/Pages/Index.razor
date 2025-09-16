@@ -6,6 +6,7 @@
 @using System.Reflection;
 @using System.IO
 @using System.Diagnostics
+@using System.Text.RegularExpressions
 @inject NavigationManager navigationManager
 
 <h1>CSharpToJavaScript Online!</h1>
@@ -43,7 +44,7 @@
 
 @code {
 	private EditContext? _EditContext;
-	private CSTOJS _CSTOJS = new(new CSTOJSOptions() { DisableConsoleColors = true });
+	private CSTOJS _CSTOJS = new();
 	private List<MetadataReference> _References = new();
 
 	public CSTOJSModel Model = new();
@@ -55,8 +56,8 @@ public class Test
 {
 	public Test()
 	{
-		int i = 5;
-		Console.WriteLine($""Hello world! {i}"");
+		string w = ""world"";
+		Console.WriteLine($""Hello {w}."");
 	}
 }
 ";
@@ -69,26 +70,43 @@ public class Test
 
 		AssemblyName[]? refs = assembly?.GetReferencedAssemblies();
 
+		Console.WriteLine(refs);
+
 		HttpClient client = new()
 		{
 			BaseAddress = new Uri(navigationManager.BaseUri)
 		};
-		Stream stream = await client.GetStreamAsync($"_framework/System.Private.CoreLib.dll");
-		_References.Add(MetadataReference.CreateFromStream(stream));
+
+
+		//
+		//
+		//well...
+		string html = await client.GetStringAsync($"_framework/");
 
 		if (refs != null)
 		{
+			string reg = @"(System.Private.CoreLib.(\w)+.dll)<";
+
+			string url = Regex.Matches(html, reg)[0].Groups[0].Value;
+			//Console.WriteLine(url.Remove(url.Length - 1));
+
+			byte[] stream = await client.GetByteArrayAsync($"_framework/{url.Remove(url.Length - 1)}");
+			_References.Add(MetadataReference.CreateFromImage(stream));
+
 			foreach (AssemblyName reference in refs)
 			{
-				stream = await client.GetStreamAsync($"_framework/{reference.Name + ".dll"}");
-				_References.Add(MetadataReference.CreateFromStream(stream));
+				reg = @$"({reference.Name}.(\w)+.dll)<";
+				url = Regex.Matches(html, reg)[0].Groups[0].Value;
+				//Console.WriteLine(url.Remove(url.Length - 1));
+
+				stream = await client.GetByteArrayAsync($"_framework/{url.Remove(url.Length - 1)}");
+				_References.Add(MetadataReference.CreateFromImage(stream));
+
 				Console.WriteLine(reference.Name);
 			}
 		}
-		else
-		{
-			Debug.Assert(true, "refs is null");
-		}
+		Debug.Assert(refs == null, "refs is null");
+
 
 		Console.WriteLine("--- --- ---");
 		Console.WriteLine("   -   -   ");
@@ -110,7 +128,7 @@ public class Test
 			stringBuilderBottom.AppendLine(Model.AddSBAtTheBottom);
 		}
 
-		List<Tuple<string, string>> _cstojsList = new();
+		Dictionary<string, string> _cstojsList = new();
 
 		if (Model.CustomCSNamesToJS != string.Empty)
 		{
@@ -122,7 +140,7 @@ public class Test
 				for (int i = 0; i < _localTuples.Count; i++)
 				{
 					string[] _local = _localTuples[i].Split("-");
-					_cstojsList.Add(new(_local[0], _local[1]));
+					_cstojsList.Add(_local[0], _local[1]);
 				}
 			}
 			else 
@@ -130,15 +148,13 @@ public class Test
 				if (Model.CustomCSNamesToJS.Contains("-")) 
 				{
 					string[] _local = Model.CustomCSNamesToJS.Split("-");
-					_cstojsList.Add(new(_local[0], _local[1]));
+					_cstojsList.Add(_local[0], _local[1]);
 				}
 			}
 		}
 
-		CSTOJS _CSTOJS = new(new CSTOJSOptions() 
+		CSTOJSOptions options = new()
 			{ 
-				DisableConsoleColors = true,
-				
 				Debug = Model.Debug,
 				DisableConsoleOutput = Model.DisableConsoleOutput,
 				UseVarOverLet = Model.UseVarOverLet,
@@ -150,8 +166,8 @@ public class Test
 
 				AddSBAtTheTop = stringBuilderTop,
 				AddSBAtTheBottom = stringBuilderBottom
-			});
-		StringBuilder sb = _CSTOJS.GenerateOneFromString(Model.CSString, _References);
+			};
+		StringBuilder sb = _CSTOJS.GenerateOneFromString(Model.CSString, options, _References);
 		Model.JSString = sb.ToString();
 	}
 }
