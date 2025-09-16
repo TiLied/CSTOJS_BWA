@@ -70,8 +70,6 @@ public class Test
 
 		AssemblyName[]? refs = assembly?.GetReferencedAssemblies();
 
-		Console.WriteLine(refs);
-
 		HttpClient client = new()
 		{
 			BaseAddress = new Uri(navigationManager.BaseUri)
@@ -85,21 +83,19 @@ public class Test
 
 		if (refs != null)
 		{
-			string reg = @"(System.Private.CoreLib.(\w)+.dll)""";
+			string reg = @"name"": ""(System.Private.CoreLib.(\w)+.dll)""";
 
-			string url = Regex.Matches(html, reg)[0].Groups[0].Value;
-			//Console.WriteLine(url.Remove(url.Length - 1));
+			string url = Regex.Matches(html, reg)[0].Groups[1].Value;
 
-			byte[] stream = await client.GetByteArrayAsync($"_framework/{url.Remove(url.Length - 1)}");
+			byte[] stream = await client.GetByteArrayAsync($"_framework/{url}");
 			_References.Add(MetadataReference.CreateFromImage(stream));
 
 			foreach (AssemblyName reference in refs)
 			{
-				reg = @$"({reference.Name}.(\w)+.dll)""";
-				url = Regex.Matches(html, reg)[0].Groups[0].Value;
-				//Console.WriteLine(url.Remove(url.Length - 1));
+				reg = @$"name"": ""({reference.Name}.(\w)+.dll)""";
+				url = Regex.Matches(html, reg)[0].Groups[1].Value;
 
-				stream = await client.GetByteArrayAsync($"_framework/{url.Remove(url.Length - 1)}");
+				stream = await client.GetByteArrayAsync($"_framework/{url}");
 				_References.Add(MetadataReference.CreateFromImage(stream));
 
 				Console.WriteLine(reference.Name);
