@@ -81,11 +81,11 @@ public class Test
 		//
 		//
 		//well...
-		string html = await client.GetStringAsync($"_framework/");
+		string html = await client.GetStringAsync($"_framework/dotnet.js");
 
 		if (refs != null)
 		{
-			string reg = @"(System.Private.CoreLib.(\w)+.dll)<";
+			string reg = @"(System.Private.CoreLib.(\w)+.dll)""";
 
 			string url = Regex.Matches(html, reg)[0].Groups[0].Value;
 			//Console.WriteLine(url.Remove(url.Length - 1));
@@ -95,7 +95,7 @@ public class Test
 
 			foreach (AssemblyName reference in refs)
 			{
-				reg = @$"({reference.Name}.(\w)+.dll)<";
+				reg = @$"({reference.Name}.(\w)+.dll)""";
 				url = Regex.Matches(html, reg)[0].Groups[0].Value;
 				//Console.WriteLine(url.Remove(url.Length - 1));
 
@@ -105,7 +105,7 @@ public class Test
 				Console.WriteLine(reference.Name);
 			}
 		}
-		Debug.Assert(refs == null, "refs is null");
+		//Debug.Assert(refs == null, "refs is null");
 
 
 		Console.WriteLine("--- --- ---");
