@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using CSharpToJavaScript.Utils
 @using Microsoft.AspNetCore.Components.Forms;
 @using CSharpToJavaScript;
 @using System.Text;
@@ -44,7 +45,7 @@
 
 @code {
 	private EditContext? _EditContext;
-	private CSTOJS _CSTOJS = new();
+
 	private List<MetadataReference> _References = new();
 
 	public CSTOJSModel Model = new();
@@ -149,10 +150,12 @@ public class Test
 			}
 		}
 
+		Log.DisableConsoleOutput = Model.DisableConsoleOutput;
+
 		CSTOJSOptions options = new()
 			{ 
 				Debug = Model.Debug,
-				DisableConsoleOutput = Model.DisableConsoleOutput,
+
 				UseVarOverLet = Model.UseVarOverLet,
 				KeepBraceOnTheSameLine = Model.KeepBraceOnTheSameLine,
 				NormalizeWhitespace = Model.NormalizeWhitespace,
@@ -163,7 +166,16 @@ public class Test
 				AddSBAtTheTop = stringBuilderTop,
 				AddSBAtTheBottom = stringBuilderBottom
 			};
-		StringBuilder sb = _CSTOJS.GenerateOneFromString(Model.CSString, options, _References);
-		Model.JSString = sb.ToString();
+
+		FileData file = new() 
+		{
+			SourceStr = Model.CSString,
+			OptionsForFile = options
+		};
+		FileData[] files = CSTOJS.Translate([file], _References.ToArray());
+		
+		Log.InfoLine("Done!");
+		
+		Model.JSString = files[0].TranslatedStr;
 	}
 }
