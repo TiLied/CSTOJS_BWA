@@ -24,13 +24,12 @@
 		</label>
 	</div>
 	<div class="CSTOJSOptions">
-		<button type="submit">Convert to JS</button>
+		<button type="submit">Translate</button>
 		<label>Debug: <InputCheckbox @bind-Value="@Model.Debug"></InputCheckbox> </label>
 		<label>Disable Console Output: <InputCheckbox @bind-Value="@Model.DisableConsoleOutput"></InputCheckbox> </label>
 		<label>Use Var Over Let: <InputCheckbox @bind-Value="@Model.UseVarOverLet"></InputCheckbox> </label>
 		<label>Keep Brace On The Same Line: <InputCheckbox @bind-Value="@Model.KeepBraceOnTheSameLine"></InputCheckbox> </label>
 		<label>Normalize Whitespace: <InputCheckbox @bind-Value="@Model.NormalizeWhitespace"></InputCheckbox> </label>
-		<label>Use Strict Equality: <InputCheckbox @bind-Value="@Model.UseStrictEquality"></InputCheckbox> </label>
 		<label>Custom CS names to JS: <InputText title="Example:Console-console,WriteLine-log"  @bind-Value="@Model.CustomCSNamesToJS"></InputText> </label>
 		<label>Add string at the top: <InputText @bind-Value="@Model.AddSBAtTheTop"></InputText> </label>
 		<label>Add string at the bottom: <InputText @bind-Value="@Model.AddSBAtTheBottom" ></InputText> </label>
@@ -58,7 +57,7 @@ public class Test
 	public Test()
 	{
 		string w = ""world"";
-		Console.WriteLine($""Hello {w}."");
+		Console.WriteLine($""Hello {w}!"");
 	}
 }
 ";
@@ -155,12 +154,12 @@ public class Test
 		CSTOJSOptions options = new()
 			{ 
 				Debug = Model.Debug,
-
+				//DisableCompilationErrors pointless I think
+				
 				UseVarOverLet = Model.UseVarOverLet,
 				KeepBraceOnTheSameLine = Model.KeepBraceOnTheSameLine,
 				NormalizeWhitespace = Model.NormalizeWhitespace,
-				UseStrictEquality = Model.UseStrictEquality,
-
+				
 				CustomCSNamesToJS = _cstojsList,
 
 				AddSBAtTheTop = stringBuilderTop,
@@ -172,10 +171,10 @@ public class Test
 			SourceStr = Model.CSString,
 			OptionsForFile = options
 		};
-		FileData[] files = CSTOJS.Translate([file], _References.ToArray());
+		file = CSTOJS.Translate(file, _References.ToArray());
 		
 		Log.InfoLine("Done!");
 		
-		Model.JSString = files[0].TranslatedStr;
+		Model.JSString = file.TranslatedStr;
 	}
 }

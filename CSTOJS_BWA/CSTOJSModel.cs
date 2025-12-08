@@ -20,7 +20,6 @@
 		public bool UseVarOverLet { get; set; } = false;
 		public bool KeepBraceOnTheSameLine { get; set; } = false;
 		public bool NormalizeWhitespace { get; set; } = false;
-		public bool UseStrictEquality { get; set; } = false;
 		public string CustomCSNamesToJS { get; set; } = string.Empty;
 		public string AddSBAtTheTop { get; set; } = string.Empty;
 		public string AddSBAtTheBottom { get; set; } = string.Empty;
