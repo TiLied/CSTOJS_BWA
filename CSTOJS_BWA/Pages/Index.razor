@@ -25,11 +25,14 @@
 	</div>
 	<div class="CSTOJSOptions">
 		<button type="submit">Translate</button>
+		
 		<label>Debug: <InputCheckbox @bind-Value="@Model.Debug"></InputCheckbox> </label>
 		<label>Disable Console Output: <InputCheckbox @bind-Value="@Model.DisableConsoleOutput"></InputCheckbox> </label>
 		<label>Use Var Over Let: <InputCheckbox @bind-Value="@Model.UseVarOverLet"></InputCheckbox> </label>
 		<label>Keep Brace On The Same Line: <InputCheckbox @bind-Value="@Model.KeepBraceOnTheSameLine"></InputCheckbox> </label>
 		<label>Normalize Whitespace: <InputCheckbox @bind-Value="@Model.NormalizeWhitespace"></InputCheckbox> </label>
+		<label>Make Properties Enumerable: <InputCheckbox @bind-Value="@Model.MakePropertiesEnumerable"></InputCheckbox> </label>
+
 		<label>Custom CS names to JS: <InputText title="Example:Console-console,WriteLine-log"  @bind-Value="@Model.CustomCSNamesToJS"></InputText> </label>
 		<label>Add string at the top: <InputText @bind-Value="@Model.AddSBAtTheTop"></InputText> </label>
 		<label>Add string at the bottom: <InputText @bind-Value="@Model.AddSBAtTheBottom" ></InputText> </label>
@@ -162,6 +165,7 @@ public class Test
 				UseVarOverLet = Model.UseVarOverLet,
 				KeepBraceOnTheSameLine = Model.KeepBraceOnTheSameLine,
 				NormalizeWhitespace = Model.NormalizeWhitespace,
+				MakePropertiesEnumerable = Model.MakePropertiesEnumerable,
 				
 				CustomCSNamesToJS = _cstojsList,
 
