@@ -57,16 +57,7 @@
 
 	protected override void OnInitialized()
 	{
-		Model.CSString = @"namespace CSTOJS_BWA.CSharp;
-public class Test
-{
-	public Test()
-	{
-		string w = ""world"";
-		Console.WriteLine($""Hello {w}!"");
-	}
-}
-";
+		Model.CSString = @"Console.WriteLine(""Hello!"");";
 		_EditContext = new(Model);
 	}
 
