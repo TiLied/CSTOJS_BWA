@@ -5,8 +5,6 @@
 @using System.Text;
 @using Microsoft.CodeAnalysis;
 @using System.Reflection;
-@using System.IO
-@using System.Diagnostics
 @using System.Text.RegularExpressions
 @inject NavigationManager navigationManager
 
@@ -91,16 +89,16 @@
 
 			byte[] stream = await client.GetByteArrayAsync($"_framework/{url}");
 			_References.Add(MetadataReference.CreateFromImage(stream));
-
-			foreach (AssemblyName reference in refs)
+			
+			for(int i = 0; i < refs.Length; i++)
 			{
-				reg = @$"name"": ""({reference.Name}.(\w)+.dll)""";
+				reg = @$"name"": ""({refs[i].Name}.(\w)+.dll)""";
 				url = Regex.Matches(html, reg)[0].Groups[1].Value;
 
 				stream = await client.GetByteArrayAsync($"_framework/{url}");
 				_References.Add(MetadataReference.CreateFromImage(stream));
 
-				Console.WriteLine(reference.Name);
+				Console.WriteLine(refs[i].Name);
 			}
 		}
 		//Debug.Assert(refs == null, "refs is null");
